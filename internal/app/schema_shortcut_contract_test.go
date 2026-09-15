@@ -962,3 +962,31 @@ func mustShortcutJSON(value any) string {
 	}
 	return string(encoded)
 }
+
+func TestCrossPlatformCoverageDocProductBoundariesReachFinalSchema(t *testing.T) {
+	cases := []struct {
+		path               string
+		positive, negative []string
+	}{
+		{"doc +search", []string{"搜索候选", "目录两组分页"}, []string{"doc +list", "drive +list", "drive +search"}},
+		{"doc +list", []string{"nodeId", "workspaceId"}, []string{"doc +search --folder", "drive +list"}},
+		{"doc +script", []string{"doc +create/+update", "parse", "只读"}, []string{"本地文件工具", "远端原生.md", "markdown create"}},
+		{"doc +download-overwrite", []string{"正文媒体", "封面"}, []string{"drive +download", "不支持覆盖", "doc +export"}},
+		{"doc +media-upload", []string{"文字文档", "不插入正文"}, []string{"sheet media-upload", "drive +upload"}},
+		{"drive +list", []string{"钉盘"}, []string{"doc +list", "两类容器ID"}},
+		{"drive +download", []string{"钉盘"}, []string{"doc +download-overwrite", "不覆盖"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.path, func(t *testing.T) {
+			tool := executeShortcutSchemaQuery(t, "--cli-path", tc.path)
+			for field, wants := range map[string][]string{"use_when": tc.positive, "avoid_when": tc.negative} {
+				prose := strings.Join(schemaContractStringSlice(tool[field]), " ")
+				for _, want := range wants {
+					if !strings.Contains(prose, want) {
+						t.Errorf("%s %s missing boundary %q", tc.path, field, want)
+					}
+				}
+			}
+		})
+	}
+}

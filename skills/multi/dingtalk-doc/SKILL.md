@@ -72,6 +72,8 @@ ID/URL 直用；标题唯一命中后执行。顺序：稳定 ID → shortcut �
 - 知识库导入再移到我的文档：`doc +import --workspace <Wiki ID>` → `wiki +move-to-drive`，复用 nodeId；禁先建在个人域。
 - 导出/下载用 cwd 相对路径；`+export` 有 `localPath` 且 `sizeBytes>0` 即终态，禁 `ls/stat`。
 
+搜索与目录浏览、adoc草稿与原生.md、正文资源与钉盘文件的边界见 [低频能力索引](references/doc.md#shortcut边界与代价)。`init-draft`仅准备后续在线文档内容；普通钉盘覆盖下载不能借用Doc入口。
+
 ## 参数与安全边界
 
 - `@file`：已有或临时文件先暂存到 cwd；传 `@相对路径`，生成文本优先 `--content -`；禁绝对路径和 `..`。

@@ -16,10 +16,12 @@ import (
 
 const downloadOverwriteCommand = "+download-overwrite"
 
+const docDownloadOverwriteIntent = "明确要把在线文字文档正文媒体或封面下载到本地并覆盖已有文件时使用；资源归属由node及resource-id确定。source=media为正文媒体，source=cover为封面；默认不覆盖用+media-download、+media-preview或+resource-download。"
+
 var DownloadOverwrite = shortcut.Shortcut{
 	Service: "doc", Command: downloadOverwriteCommand, Product: productDoc,
 	Description:   "确认后下载正文媒体或封面，允许原子替换已有普通文件",
-	Intent:        "用户明确需要覆盖本地已有文件时使用；source=media下载正文资源，source=cover下载封面。默认不覆盖或临时预览使用+media-download、+media-preview或+resource-download。",
+	Intent:        docDownloadOverwriteIntent,
 	Risk:          shortcut.RiskWrite,
 	Safety:        contract.SafetySpec{Effect: "write", Risk: "medium", Confirmation: "user_required", Idempotency: "idempotent"},
 	OutputRollout: output.RolloutUnifiedActive,
@@ -59,7 +61,8 @@ var DownloadOverwrite = shortcut.Shortcut{
 }
 
 func downloadOverwriteContract() corecmd.ContractDecl {
-	d := docContract(downloadOverwriteCommand, "确认后覆盖下载文档资源", "明确要替换本地文件时使用；普通下载使用默认不覆盖的原入口", []string{"dws doc +download-overwrite --node <DOC_ID> --source cover --output ./cover.png"})
+	d := docContract(downloadOverwriteCommand, "确认后覆盖下载文档资源", docDownloadOverwriteIntent, []string{"dws doc +download-overwrite --node <DOC_ID> --source cover --output ./cover.png"})
+	d.Selection.AvoidWhen = append(d.Selection.AvoidWhen, "钉盘普通文件使用 drive +download，当前该入口不支持覆盖；不得借用本命令替换钉盘下载。正文导出用 doc +export，聊天附件用 chat +messages-resource-download")
 	d.DryRun = &contract.DryRunSpec{PreviewKind: contract.DryRunPreviewPlan, RemoteReads: false}
 	d.Result = &contract.ResultSpec{Outcomes: []contract.ResultOutcome{contract.ResultOutcomeSuccess, contract.ResultOutcomeFailure}, DataSchema: json.RawMessage(`{"type":"object","properties":{"executed":{"type":"boolean","description":"是否已执行本地下载发布"},"preview_kind":{"type":"string","description":"dry-run计划类型"},"nodeId":{"type":"string","description":"资源所属文档"},"source":{"type":"string","description":"资源来源media或cover"},"resourceId":{"type":"string","description":"正文媒体资源UUID"},"localPath":{"type":"string","description":"工作目录内的输出相对路径"},"sizeBytes":{"type":"integer","description":"下载文件字节数"},"verified":{"type":"boolean","description":"正文媒体下载非空校验结果"}}}`)}
 	return d

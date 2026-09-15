@@ -18,10 +18,12 @@ import (
 	gmtext "github.com/yuin/goldmark/text"
 )
 
+const docScriptIntent = "为后续 doc +create/+update 准备在线文字文档的Markdown或JSONML草稿时使用init-draft；目录内草稿不上传。parse检查待写入内容或--node在线文档的字数和块结构，只读。不是通用脚本执行器，也不创建远端原生.md。"
+
 var Script = shortcut.Shortcut{
 	Service: "doc", Command: "+script", Product: productDoc,
 	Description:   "初始化本地文档草稿，或检查Markdown/JSONML结构和字数",
-	Intent:        "需要先在本地建立草稿、查看结构统计并检查字数和必需块时使用；不会上传或修改在线文档。在线文档可用--node读取后检查。XML不属于本入口支持的格式。",
+	Intent:        docScriptIntent,
 	Risk:          shortcut.RiskWrite,
 	Safety:        contract.SafetySpec{Effect: "write", Risk: "low", Confirmation: "not_required", Idempotency: "unknown"},
 	OutputRollout: output.RolloutUnifiedActive,
@@ -40,7 +42,8 @@ var Script = shortcut.Shortcut{
 }
 
 func scriptContract() corecmd.ContractDecl {
-	d := docContract("+script", "初始化本地草稿或检查文档结构", "本地准备Markdown/JSONML草稿、检查字数与必需块；没有上传写入", []string{`dws doc +script --command init-draft`, `dws doc +script --command parse --content @draft.md --required-blocks heading`})
+	d := docContract("+script", "初始化本地草稿或检查文档结构", docScriptIntent, []string{`dws doc +script --command init-draft`, `dws doc +script --command parse --content @draft.md --required-blocks heading`})
+	d.Selection.AvoidWhen = append(d.Selection.AvoidWhen, "仅创建任意本地文件使用编辑器或本地文件工具；明确创建远端原生.md使用 markdown create，不能把它当成本地建文件；只查元信息用 doc +inspect")
 	d.DryRun = &contract.DryRunSpec{PreviewKind: contract.DryRunPreviewPlan, RemoteReads: false}
 	d.Result = &contract.ResultSpec{Outcomes: []contract.ResultOutcome{contract.ResultOutcomeSuccess, contract.ResultOutcomeFailure}, DataSchema: json.RawMessage(`{"type":"object","properties":{"preview_kind":{"type":"string","description":"dry-run的计划类型plan"},"command":{"type":"string","description":"本地操作"},"executed":{"type":"boolean","description":"是否执行实际动作"},"workspace":{"type":"string","description":"新建的相对草稿目录"},"draft_path":{"type":"string","description":"可编辑的相对草稿路径"},"profile":{"type":"object","description":"字数和块结构统计"},"assessment":{"type":"string","description":"结构检查状态passed或failed"}}}`)}
 	return d
