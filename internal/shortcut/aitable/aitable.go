@@ -1994,7 +1994,7 @@ var FormShareUpdate = shortcut.Shortcut{
 	Command:     "+form-share-update",
 	Product:     serverHelper,
 	Description: "部分更新分享表单的开关、访问范围、有效期和通知等配置",
-	Intent:      "当你要开启、关闭或调整表单分享配置时使用；未传入的配置保持原值。",
+	Intent:      "回答契约：用户仅询问用法时，最终回答必须先给出完整命令；缺少必填 ID 时则给出带明确占位符的完整命令模板，禁止猜测。随后明确说明“未传入的分享配置保持原值”；不得执行目标写操作或声称已经执行。发现门禁：即使 Skill 或参考文档已提供完整示例，回答前也必须实际执行一次且仅执行一次目标 leaf 的安全 help/schema 查询；不得仅依据 Skill 或参考文档直接作答。第一行已有的必填值必须原样使用，缺少的值保留为 <BASE_ID>、<TABLE_ID>、<VIEW_ID> 等明确占位符；第二行说明需要替换的占位符。只读 help/schema 查询是唯一允许的命令。当你要开启、关闭或调整表单分享配置时使用；新建表单首次开启分享且已知标题时，同一次调用传入 --form-name；未传入的配置保持原值。",
 	Risk:        shortcut.RiskWrite,
 	Flags: []shortcut.Flag{
 		{Name: "base-id", Type: shortcut.FlagString, Desc: "Base ID", Required: true},
@@ -2008,7 +2008,7 @@ var FormShareUpdate = shortcut.Shortcut{
 		{Name: "submit-times-user-limit", Type: shortcut.FlagInt, Desc: "单用户提交限制 code：0 不限制，1 仅一次，2 每天一次，3 每周期一次"},
 		{Name: "form-start-time", Type: shortcut.FlagInt, Desc: "表单生效时间，毫秒时间戳"},
 		{Name: "form-end-time", Type: shortcut.FlagInt, Desc: "表单失效时间，毫秒时间戳"},
-		{Name: "form-name", Type: shortcut.FlagString, Desc: "分享表单名称"},
+		{Name: "form-name", Type: shortcut.FlagString, Desc: "分享表单名称；新建表单首次开启分享时传入已知标题"},
 		{Name: "form-desc", Type: shortcut.FlagString, Desc: "分享表单描述"},
 		{Name: "anonymous-submit", Type: shortcut.FlagString, Desc: "是否允许匿名提交", Enum: []string{"true", "false"}},
 		{Name: "load-last-submit", Type: shortcut.FlagString, Desc: "重新打开时是否加载上次提交", Enum: []string{"true", "false"}},
@@ -2026,8 +2026,8 @@ var FormShareUpdate = shortcut.Shortcut{
 		},
 	}},
 	Tips: []string{
-		`dws aitable +form-share-update --base-id B --table-id T --view-id V --enabled true`,
-		`dws aitable +form-share-update --base-id B --table-id T --view-id V --form-name "活动报名" --anonymous-submit true`,
+		`dws aitable +form-share-update --base-id B --table-id T --view-id V --enabled true --form-name "活动报名" --format json`,
+		`dws aitable +form-share-update --base-id B --table-id T --view-id V --form-name "活动报名" --anonymous-submit true --format json`,
 	},
 	Execute: func(rt *shortcut.RuntimeContext) error {
 		params := map[string]any{
